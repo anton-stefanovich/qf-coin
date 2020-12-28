@@ -92,26 +92,25 @@ class Trader:
                 source_asset=source, target_asset=target,
                 amount=abs(trade_value))))
 
-        transaction_id = cherry_pick_first(loads(response.text), 'id')
+        transaction_id = cherry_pick_first(
+            loads(response.text), 'id')
+
         if transaction_id:
-
-            transaction_link = f'{coinbase_trades_url}/{transaction_id}?'
+            print(f'Got the transaction id: {transaction_id}')
+            transaction_link = f'{coinbase_trades_url}/{transaction_id}'
             self.__session.post(f'{transaction_link}/commit')
+            print(f'Transaction link: {transaction_link}')
 
-            for _ in range(7):
+            for attempt in range(7):
                 transaction_status = self.__session.get(transaction_link)
                 if transaction_status and 'completed' in cherry_pick_first(
                         loads(transaction_status.text), 'status'):
-                    break
+                    return print('Transaction succeed') or True
 
                 else:
-                    sleep(1)  # sleep between status check attempts
+                    print('Transaction verification '
+                          f'failed #{attempt}') or sleep(1)
 
-            else:  # no transaction success status
-                return print('No transaction success status') or False
+            return print('No transaction success status') or False
 
-            # transaction succeed
-            return print('Transaction succeed') or True
-
-        else:  # no transaction_id
-            return print('Cant get transaction ID') or False
+        return print('Cant get transaction ID') or False
