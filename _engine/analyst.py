@@ -7,8 +7,8 @@ class Analyst:
     __KEY_LAST__, __KEY_EDGE__ = 'last', 'edge'
 
     def __init__(self, amounts: dict, rates: dict = None,
-                 min_exchange_value: float = 1.0):
-        self.__trade_value = min_exchange_value
+                 trade_percentage: float = 0.01):
+        self.__trade_percentage = trade_percentage
         self.reset(amounts, rates)
 
     @staticmethod
@@ -42,23 +42,26 @@ class Analyst:
 
         return True  # all data has been processed
 
-    def amount(self, currency: str):
-        currency_data = self.__data.get(currency)
-        return currency_data[self.__KEY_AMOUNT__] / \
-            currency_data[self.__KEY_BASE__] * \
-            currency_data[self.__KEY_LAST__]
-
     @property
     def exchange_data(self):
+
+        def amount(currency: str):
+            currency_data = self.__data.get(currency)
+            return currency_data[self.__KEY_AMOUNT__] / \
+                currency_data[self.__KEY_BASE__] * \
+                currency_data[self.__KEY_LAST__]
 
         # def actual_index_by_currency(currency: str):
         #     return self.__data.get(currency, dict())[self.__KEY_LAST__]
 
-        pair = (max(self.__data, key=lambda currency:
-                    self.amount(currency)),
-                min(self.__data, key=lambda currency:
-                    self.amount(currency)))
+        ordered_data = tuple(sorted(
+            self.__data, reverse=True,
+            key=lambda key: amount(key)))
 
-        return pair if self.__trade_value < (
-            self.amount(pair[0]) - self.amount(pair[1])) \
-            else None  #
+        exchange_pair = tuple(
+            (key, amount(key))
+            for key in (ordered_data[index]
+                        for index in (0, -1)))
+
+        return exchange_pair if self.__trade_percentage < \
+            exchange_pair[0][1] / exchange_pair[1][1] - 1 else None

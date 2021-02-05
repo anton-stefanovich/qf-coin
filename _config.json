@@ -3,11 +3,11 @@
   "api-secret":         "<coinbase-api-secret>",
   "api-version":        "2020-12-19",
 
-  "trade-value":        5,
+  "trade-percentage":   0.04,
   "trade-currencies":   ["etc", "eth"],
 
   "debug-scope":        "month",
-  "debug-amount":       70,
+  "debug-amount":       1000,
   "debug-exchange-fee": 0.02,
 
   "trade-cookie":       "<coinbase-auth-cookie>"

@@ -10,23 +10,19 @@ class Trader:
         self.__analyst = Analyst(
             self.__account.amounts,
             self.__source.pop(),
-            config.trade_value)
+            config.trade_percentage)
 
     def go(self):
         while self.__analyst.feed(self.__source.pop()):
             if exchange_data := self.__analyst.exchange_data:
-                source, target = exchange_data
-                amount_source, amount_target = (
-                    self.__analyst.amount(key)
-                    for key in (source, target))
 
-                self.__account.update({
-                    source: amount_source,
-                    target: amount_target})
+                self.__account.update(dict(
+                    record for record in exchange_data))
 
-                if transaction := \
-                        self.__account.exchange(source, target, (
-                        amount_source - amount_target) / 2):
+                exchange_currencies, exchange_amounts = zip(*exchange_data)
+                if transaction := self.__account.exchange(
+                        exchange_currencies[0], exchange_currencies[-1],
+                        exchange_amounts[0]/2 - exchange_amounts[-1]/2):
                     self.__analyst.reset(self.__account.amounts)
                     print(self.__account.amounts)
                     assert transaction.commit()
