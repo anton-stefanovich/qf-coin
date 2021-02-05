@@ -1,0 +1,14 @@
+{
+  "api-key":            "<coinbase-api-key>",
+  "api-secret":         "<coinbase-api-secret>",
+  "api-version":        "2020-12-19",
+
+  "trade-value":        5,
+  "trade-currencies":   ["etc", "eth"],
+
+  "debug-scope":        "month",
+  "debug-amount":       70,
+  "debug-exchange-fee": 0.02,
+
+  "trade-cookie":       "<coinbase-auth-cookie>"
+}
