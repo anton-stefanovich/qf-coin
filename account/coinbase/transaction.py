@@ -1,7 +1,7 @@
-from ._base import Transaction
+from ..transaction import Transaction
 
 
-class TransactionCoinbase (Transaction):
+class CoinbaseTransaction (Transaction):
     from requests import Session
 
     __CB_TRADE_URL__ = 'https://www.coinbase.com/api/v2/trades'
@@ -18,7 +18,7 @@ class TransactionCoinbase (Transaction):
                 amount=amount, amount_asset=currency,
                 amount_from='input')))
 
-        from _common.picker import cherry_pick_first
+        from tools.picker import cherry_pick_first
         self.__transaction_id = cherry_pick_first(
             loads(response.text), 'id')
 
@@ -31,7 +31,7 @@ class TransactionCoinbase (Transaction):
         self.__session.post(f'{transaction_link}/commit')
 
         from json import loads
-        from _common.picker import cherry_pick_first
+        from tools.picker import cherry_pick_first
         for attempt in range(attempts):  # checking the transaction status
             transaction_status = self.__session.get(transaction_link)
             if transaction_status and 'completed' in cherry_pick_first(

@@ -1,12 +1,12 @@
-from _common.picker import cherry_pick_first
-from ._base import Source
+from ..source import Source
 
 
-class SourceAPI (Source):
+class CoinbaseSourceAPI (Source):
 
     __last_access = None
 
     def __init__(self, config, *currencies):
+        from tools.picker import cherry_pick_first
         from pycoinbase.wallet.client import Client
 
         self.__client = Client(
@@ -22,8 +22,8 @@ class SourceAPI (Source):
                 known_accounts, name=f'{currency} Wallet'))
             for currency in self.__currencies)
 
-        from account.coinbase import AccountCoinbase
-        self.__account = AccountCoinbase(dict((currency, dict(
+        from .account import CoinbaseAccount
+        self.__account = CoinbaseAccount(dict((currency, dict(
                 id=cherry_pick_first(account_details, 'id'),
                 asset_id=cherry_pick_first(account_details, 'asset_id')))
                                               for currency, account_details in accounts_details.items()),

@@ -1,8 +1,10 @@
-from abc import ABC, abstractmethod
-from source import Source
+from abc import ABC
 
 
 class Account (ABC):
+    from .source import Source
+    from abc import abstractmethod
+
     __amounts = dict()
 
     def __init__(self, amounts: dict):

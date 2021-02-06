@@ -1,13 +1,13 @@
-from ._base import Source
-from json import load
+from ..source import Source
 
 
-class SourceDebug (Source):
+class DebugSource (Source):
 
     def __init__(self, key: str = None, *currencies):
 
         def load_test_data(currency: str) -> dict:
-            with open(f'./source/data/{currency}.json') as file:
+            with open(f'./data/{currency}.json') as file:
+                from json import load
                 return load(file)
 
         assert len(currencies)

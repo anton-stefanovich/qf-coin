@@ -1,14 +1,14 @@
-from transaction.coinbase import TransactionCoinbase
-from source import Source
-from ._base import Account
+from ..account import Account
 
 
-class AccountCoinbase (Account):
+class CoinbaseAccount (Account):
+    from ..source import Source
+    from ..transaction import Transaction
 
     @property
     def source(self) -> Source:
-        from source import SourceAPI
-        return SourceAPI(None)  # FixMe
+        from .source import CoinbaseSourceAPI
+        return CoinbaseSourceAPI(None)  # FixMe
 
     __CB_BASE_URL__ = 'https://www.coinbase.com/api/v2'
 
@@ -34,7 +34,7 @@ class AccountCoinbase (Account):
             f'{self.__CB_BASE_URL__}/assets/prices'
             f'?base={base}&filter=listed&resolution=latest')
 
-        from _common.picker import cherry_pick_first
+        from tools.picker import cherry_pick_first
         return None if not rates_response else dict(
             (currency, float(cherry_pick_first(
                 cherry_pick_first(rates_response.json(), base=currency),
@@ -44,7 +44,7 @@ class AccountCoinbase (Account):
         accounts_response = self.__session.get(
             f'{self.__CB_BASE_URL__}/accounts?limit=100')
 
-        from _common.picker import cherry_pick_first
+        from tools.picker import cherry_pick_first
         return None if not accounts_response else dict((
             cherry_pick_first(item, 'balance > currency'),
             float(cherry_pick_first(item, 'balance > amount')))
@@ -60,13 +60,14 @@ class AccountCoinbase (Account):
                      if asset == self.__decode_asset(value)), None)
 
     def exchange(self, source: str, target: str,
-                 amount: float, currency: str = 'USD') -> TransactionCoinbase:
+                 amount: float, currency: str = 'USD') -> Transaction:
 
-        return None if not amount else TransactionCoinbase(
+        from .transaction import CoinbaseTransaction
+        return None if not amount else CoinbaseTransaction(
             self.__session, self.__decode_asset(source),
             self.__decode_asset(target), amount, currency)
 
-    def exchange_part(self, source: str, target: str, part: float) -> TransactionCoinbase:
+    def exchange_part(self, source: str, target: str, part: float) -> Transaction:
         part = part if part <= 1 else part / 100
         code = self.__decode_currency(source)
         amount = self.get_amounts().get(code)

@@ -1,10 +1,10 @@
 
 if __name__ == '__main__':
-    from _engine.config import Config
+    from tools.config import Config
     config = Config.read('config.json')
 
-    from account import AccountFake
-    account = AccountFake(config)
+    from account import DebugAccount
+    account = DebugAccount(config)
 
-    from _engine.trader import Trader
+    from core.trader import Trader
     Trader(account, config).go()

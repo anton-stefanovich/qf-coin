@@ -1,7 +1,8 @@
-from abc import ABC, abstractmethod
+from abc import ABC
 
 
 class Source (ABC):
+    from abc import abstractmethod
 
     @abstractmethod
     def pop(self):

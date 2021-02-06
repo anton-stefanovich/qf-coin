@@ -1,7 +1,8 @@
-from ._base import Account, Source
+from ..account import Account
 
 
-class AccountFake (Account):
+class DebugAccount (Account):
+    from ..source import Source
     from argparse import Namespace
 
     def __init__(self, config: Namespace):
@@ -15,11 +16,11 @@ class AccountFake (Account):
         super().amounts[target] += amount * (1 - self.__exchange_fee)
         super().amounts[source] -= amount
 
-        from transaction import TransactionFake
-        return TransactionFake()
+        from .transaction import DebugTransaction
+        return DebugTransaction()
 
     @property
     def source(self) -> Source:
-        from source import SourceDebug
-        return SourceDebug(self.__scope,
+        from .source import DebugSource
+        return DebugSource(self.__scope,
                            *super().amounts.keys())

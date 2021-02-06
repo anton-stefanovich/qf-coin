@@ -9,7 +9,7 @@ def __collection_keys(container) -> list:
 
 
 def pick_index(elements, index: int = None):
-    from _common.converter import any_to_int
+    from tools.converter import any_to_int
     index = any_to_int(index)
 
     # normalizing the index (None means 0, -1 means last, etc)
@@ -45,7 +45,7 @@ def pick_key(element, key):
 
 
 def cherry_pick(container, keys=None, index: int = None, **kwargs):
-    from _common.converter import iterable
+    from tools.converter import iterable
     if kwargs or isinstance(keys, (dict, )):
         assert any((keys, kwargs,)) and not all((keys, kwargs,)), \
             f'Wrong parameters provided for picking elements: {locals()}'
