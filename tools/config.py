@@ -12,7 +12,8 @@ class Config:
         parser = ArgumentParser('Auto''trader by QF')
 
         for _type, _keys in {
-            float: ('trade-percentage', 'debug-exchange-fee', 'debug-amount'),
+            float: ('trade-percentage', 'trade-amount',
+                    'debug-exchange-fee', 'debug-amount'),
             str:   ('trade-currencies', 'trade-cookie', 'debug-scope',
                     'api-key', 'api-secret', 'api-version')}.items():
             for _key in _keys:  # iterating the keys set
