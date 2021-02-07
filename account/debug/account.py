@@ -12,12 +12,12 @@ class DebugAccount (Account):
         self.__exchange_fee = config.debug_exchange_fee
         self.__scope = config.debug_scope
 
-    def exchange(self, source: str, target: str, amount: float):
-        super().amounts[target] += amount * (1 - self.__exchange_fee)
-        super().amounts[source] -= amount
-
-        from .transaction import DebugTransaction
-        return DebugTransaction()
+    def exchange(self, source: str, target: str, amount: float,
+                 expected_current_amounts: dict = None) -> bool:
+        self.amounts.update(expected_current_amounts or dict())
+        self.amounts[target] += amount * (1 - self.__exchange_fee)
+        self.amounts[source] -= amount
+        return True
 
     @property
     def source(self) -> Source:

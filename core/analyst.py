@@ -1,4 +1,5 @@
 class Analyst:
+    from account import Transaction
 
     # all data for analyzing the market
     __data = dict()
@@ -12,10 +13,6 @@ class Analyst:
         self.__trade_percentage = trade_percentage
         self.__trade_amount = trade_amount
         self.reset(amounts, rates)
-
-    @staticmethod
-    def __pick_currency_rate(data: dict, key: str) -> float:
-        return float(data.get(key, 0)) if data else 0
 
     def reset(self, amounts: dict, currencies: dict = None):
         currencies = currencies or dict(
@@ -44,34 +41,38 @@ class Analyst:
 
         return True  # all data has been processed
 
+    def __is_valid(self, transaction: Transaction) -> bool:
+        source_rate, target_rate = tuple(
+            self.__data.get(key)[self.__KEY_LAST__] /
+            self.__data.get(key)[self.__KEY_EDGE__] - 1
+            for key in (transaction.source, transaction.target))
+
+        return transaction.amount > self.__trade_amount and \
+            abs(source_rate - target_rate) > self.__trade_percentage
+
     @property
-    def exchange_data(self):
+    def transaction(self) -> Transaction:
+        from account import Transaction
 
         def amount(currency: str):
             currency_data = self.__data.get(currency)
-            return currency_data[self.__KEY_AMOUNT__] / \
-                currency_data[self.__KEY_BASE__] * \
-                currency_data[self.__KEY_LAST__]
-
-        def is_ready_to_release(release_pair: tuple) -> bool:
-            rate_values = tuple(
-                self.__data.get(pair[0])[self.__KEY_LAST__] /
-                self.__data.get(pair[0])[self.__KEY_EDGE__] - 1
-                for pair in release_pair)
-
-            return abs(rate_values[0] - rate_values[-1]) > \
-                self.__trade_percentage and self.__trade_amount < \
-                release_pair[0][1] - release_pair[-1][-1]
-
-        # def actual_index_by_currency(currency: str):
-        #     return self.__data.get(currency, dict())[self.__KEY_LAST__]
+            return (currency_data[self.__KEY_AMOUNT__] /
+                    currency_data[self.__KEY_BASE__] *
+                    currency_data[self.__KEY_LAST__])
 
         release_items = tuple(sorted(
             self.__data, reverse=True,
             key=lambda key: amount(key)))
 
-        exchange_pair = tuple(
-            (key, amount(key)) for key in (
-                release_items[index] for index in (0, -1)))
+        source_info, target_info = tuple(
+            (currency, amount(currency)) for currency in
+            (release_items[key] for key in (0, -1)))
 
-        return exchange_pair if is_ready_to_release(exchange_pair) else None
+        transaction = Transaction(
+            source_info[0], target_info[0],
+            (source_info[-1] - target_info[-1]) / 2,
+            dict(record for record in (source_info, target_info)))
+
+        return transaction \
+            if self.__is_valid(transaction) \
+            else None
