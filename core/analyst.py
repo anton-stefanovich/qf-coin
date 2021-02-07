@@ -47,26 +47,31 @@ class Analyst:
             self.__data.get(key)[self.__KEY_EDGE__] - 1
             for key in (transaction.source, transaction.target))
 
-        return transaction.amount > self.__trade_amount and \
+        trade_amount = self.__trade_amount \
+            if self.__trade_amount >= 1 else \
+            max(self.__expected_amount(transaction.source) *
+                self.__trade_amount, 1)
+
+        return transaction.amount > trade_amount and \
             abs(source_rate - target_rate) > self.__trade_percentage
+
+    def __expected_amount(self, currency: str):
+        currency_data = self.__data.get(currency)
+        return (currency_data[self.__KEY_AMOUNT__] /
+                currency_data[self.__KEY_BASE__] *
+                currency_data[self.__KEY_LAST__])
 
     @property
     def transaction(self) -> Transaction:
         from account import Transaction
 
-        def amount(currency: str):
-            currency_data = self.__data.get(currency)
-            return (currency_data[self.__KEY_AMOUNT__] /
-                    currency_data[self.__KEY_BASE__] *
-                    currency_data[self.__KEY_LAST__])
-
         release_items = tuple(sorted(
-            self.__data, reverse=True,
-            key=lambda key: amount(key)))
+            self.__data, reverse=True, key=lambda key:
+                self.__expected_amount(key)))
 
         source_info, target_info = tuple(
-            (currency, amount(currency)) for currency in
-            (release_items[key] for key in (0, -1)))
+            (currency, self.__expected_amount(currency))
+            for currency in (release_items[key] for key in (0, -1)))
 
         transaction = Transaction(
             source_info[0], target_info[0],

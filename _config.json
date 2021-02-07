@@ -3,8 +3,8 @@
   "api-secret":         "<coinbase-api-secret>",
   "api-version":        "2020-12-19",
 
-  "trade-amount":       7,
-  "trade-percentage":   0.04,
+  "trade-amount":       0.03,
+  "trade-percentage":   0.05,
   "trade-currencies":   ["etc", "eth"],
 
   "debug-scope":        "month",
