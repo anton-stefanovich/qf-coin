@@ -5,5 +5,4 @@ class Source (ABC):
     from abc import abstractmethod
 
     @abstractmethod
-    def pop(self):
-        pass
+    def pop(self) -> dict: pass

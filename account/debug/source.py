@@ -2,20 +2,19 @@ from ..source import Source
 
 
 class DebugSource (Source):
+    from argparse import Namespace
 
-    def __init__(self, key: str = None, *currencies):
+    def __init__(self, config: Namespace):
 
         def load_test_data(currency: str) -> dict:
-            with open(f'./data/{currency}.json') as file:
+            with open(f'./data/{currency.lower()}.json') as file:
                 from json import load
                 return load(file)
 
-        assert len(currencies)
-
         sources = dict(
-            (currency, load_test_data(currency)
-                ['data']['prices'][key or 'day']['prices'])
-            for currency in currencies)
+            (currency, load_test_data(currency)['data']['prices']
+                [config.debug_scope or 'day']['prices'])
+            for currency in config.trade_currencies)
 
         sources = dict((currency, dict(
             (timestamp, value) for value, timestamp in source))
@@ -29,7 +28,7 @@ class DebugSource (Source):
                 _sources[timestamp] = target
 
         self.__sources = list(filter(
-            lambda source: all(_key in source.keys() for _key in currencies),
+            lambda source: all(_key in source.keys() for _key in sources.keys()),
             (_sources[_key] for _key in sorted(_sources.keys()))))
 
     def pop(self) -> dict:

@@ -3,38 +3,24 @@ from ..source import Source
 
 class CoinbaseSourceAPI (Source):
 
-    __last_access = None
+    def __init__(self, config):
+        from requests import Session
+        self.__session = Session()
+        self.__session.cookies.update(
+            dict(jwt=config.trade_cookie))
 
-    def __init__(self, config, *currencies):
-        from tools.picker import cherry_pick_first
-        from pycoinbase.wallet.client import Client
-
-        self.__client = Client(
-            config.api_key, config.api_secret,
-            api_version=config.api_version)
-
-        known_accounts = self.__client \
-            .get_accounts().response.json()
-
-        self.__currencies = currencies
-        accounts_details = dict(
-            (currency, cherry_pick_first(
-                known_accounts, name=f'{currency} Wallet'))
-            for currency in self.__currencies)
-
-        from .account import CoinbaseAccount
-        self.__account = CoinbaseAccount(dict((currency, dict(
-                id=cherry_pick_first(account_details, 'id'),
-                asset_id=cherry_pick_first(account_details, 'asset_id')))
-                                              for currency, account_details in accounts_details.items()),
-                                         config.trade_cookie)
+        self.__trade_currencies = \
+            (key.upper() for key in
+             config.trade_currencies)
 
     def pop(self):
-        from time import sleep, time
-        if not self.__last_access:
-            self.__last_access = time()
-        else:
-            sleep(max(0.0, self.__last_access + 7 - time()))
-            self.__last_access = time()
+        from ._constants import __CB_BASE_URL__
+        rates_response = self.__session.get(
+            f'{__CB_BASE_URL__}/assets/prices'
+            f'?base=USD&filter=listed&resolution=latest')
 
-        return self.__account.get_rates()
+        from tools.picker import cherry_pick_first
+        return None if not rates_response else dict(
+            (currency.lower(), float(cherry_pick_first(
+                cherry_pick_first(rates_response.json(), base=currency),
+                'latest'))) for currency in self.__trade_currencies)

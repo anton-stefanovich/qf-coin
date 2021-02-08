@@ -10,7 +10,9 @@ class DebugAccount (Account):
             dict((currency, config.debug_amount)
                  for currency in config.trade_currencies))
         self.__exchange_fee = config.debug_exchange_fee
-        self.__scope = config.debug_scope
+
+        from .source import DebugSource
+        self.__source = DebugSource(config)
 
     def exchange(self, source: str, target: str, amount: float,
                  expected_current_amounts: dict = None) -> bool:
@@ -20,7 +22,5 @@ class DebugAccount (Account):
         return True
 
     @property
-    def source(self) -> Source:
-        from .source import DebugSource
-        return DebugSource(self.__scope,
-                           *super().amounts.keys())
+    def rates(self) -> dict:
+        return self.__source.pop()

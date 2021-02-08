@@ -17,7 +17,7 @@ class Account (ABC):
 
     @property
     @abstractmethod
-    def source(self) -> Source: pass
+    def rates(self) -> dict: pass
 
     @abstractmethod
     def exchange(self, source: str, target: str, amount: float,

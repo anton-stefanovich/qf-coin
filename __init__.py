@@ -3,6 +3,9 @@ if __name__ == '__main__':
     from tools.config import Config
     config = Config.read('config.json')
 
+    # from account import CoinbaseSourceAPI
+    # rates = CoinbaseSourceAPI(config).pop()
+
     from account import DebugAccount
     account = DebugAccount(config)
 
