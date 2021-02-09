@@ -4,10 +4,8 @@ from ..source import Source
 class CoinbaseSourceAPI (Source):
 
     def __init__(self, config):
-        from requests import Session
-        self.__session = Session()
-        self.__session.cookies.update(
-            dict(jwt=config.trade_cookie))
+        from .session import CoinbaseSession
+        self.__session = CoinbaseSession(config)
 
         self.__trade_currencies = \
             (key.upper() for key in

@@ -2,75 +2,61 @@ from ..account import Account
 
 
 class CoinbaseAccount (Account):
-    from ..source import Source
-    from ..transaction import Transaction
+    from argparse import Namespace
 
-    @property
-    def source(self) -> Source:
+    def __init__(self, config: Namespace):
+
+        from .session import CoinbaseSession
         from .source import CoinbaseSourceAPI
-        return CoinbaseSourceAPI(None)  # FixMe
 
-    __CB_BASE_URL__ = 'https://www.coinbase.com/api/v2'
-
-    def __init__(self, assets: dict, auth_cookie: str, amounts: dict):
-        super().__init__(amounts)
-
-        self.__alias_map = dict(
-            (alias, asset.get('asset_id', None))
-            for alias, asset in assets.items())
-
-        self.__accounts_map = dict((
-            asset.get('id', None),
-            asset.get('asset_id', None))
-                for asset in assets.values())
-
-        from requests import Session
-        self.__session = Session()
-        self.__session.cookies.update(
-            dict(jwt=auth_cookie))
-
-    def get_rates(self, base: str = 'USD') -> dict:
-        rates_response = self.__session.get(
-            f'{self.__CB_BASE_URL__}/assets/prices'
-            f'?base={base}&filter=listed&resolution=latest')
+        super().__init__(
+            dict.fromkeys(config.trade_currencies),
+            CoinbaseSourceAPI(config))
 
         from tools.picker import cherry_pick_first
-        return None if not rates_response else dict(
-            (currency, float(cherry_pick_first(
-                cherry_pick_first(rates_response.json(), base=currency),
-                'latest'))) for currency in self.__alias_map.keys())
+        from pycoinbase.wallet.client import Client
 
-    def get_amounts(self) -> dict:
+        self.__session = CoinbaseSession(config)
+        self.__client = Client(
+            config.api_key, config.api_secret,
+            api_version=config.api_version)
+
+        known_accounts = self.__client \
+            .get_accounts().response.json()
+        self.__accounts = dict((currency, dict(
+            (key, cherry_pick_first(account_details, key)) for key in ('id', 'asset_id')))
+            for currency, account_details in dict((currency, cherry_pick_first(
+                known_accounts, name=f'{currency.upper()} Wallet'))
+                for currency in config.trade_currencies).items())
+
+        self.__sync_amounts()
+
+    def __sync_amounts(self):
+        # FixMe: convert to the client usage
+        from ._constants import __CB_BASE_URL__
         accounts_response = self.__session.get(
-            f'{self.__CB_BASE_URL__}/accounts?limit=100')
+            f'{__CB_BASE_URL__}/accounts?limit=100')
 
+        accounts_response = accounts_response.json() \
+            if accounts_response else None
+
+        # getting the map of native amounts
         from tools.picker import cherry_pick_first
-        return None if not accounts_response else dict((
-            cherry_pick_first(item, 'balance > currency'),
-            float(cherry_pick_first(item, 'balance > amount')))
-            for item in cherry_pick_first(
-                accounts_response.json(), '_common'))
+        native_amounts = None if not accounts_response else dict(
+            (currency, float(cherry_pick_first(cherry_pick_first(
+                accounts_response, id=info.get('id')), 'balance > amount')))
+            for currency, info in self.__accounts.items())
 
-    def __decode_asset(self, value: str) -> str:
-        return self.__alias_map.get(value, None) or \
-               self.__accounts_map.get(value, value)
+        self.amounts.update(dict(
+            (currency, native_amounts[currency] * amount)
+            for currency, amount in self.rates.items()))
 
-    def __decode_currency(self, value: str) -> str:
-        return next((alias for alias, asset in self.__alias_map.items()
-                     if asset == self.__decode_asset(value)), None)
+    def exchange(self, source: str, target: str, amount: float,
+                 expected_current_amounts: dict = None) -> bool:
 
-    def exchange(self, source: str, target: str,
-                 amount: float, currency: str = 'USD') -> Transaction:
+        # perform transaction
 
-        from .transaction import CoinbaseTransaction
-        return None if not amount else CoinbaseTransaction(
-            self.__session, self.__decode_asset(source),
-            self.__decode_asset(target), amount, currency)
-
-    def exchange_part(self, source: str, target: str, part: float) -> Transaction:
-        part = part if part <= 1 else part / 100
-        code = self.__decode_currency(source)
-        amount = self.get_amounts().get(code)
-
-        return self.exchange(source, target, part * amount, code) \
-            if 0 <= part <= 1 and amount else None
+        self.__sync_amounts()
+        return all(0.05 > abs(self.amounts[currency] /
+                   expected_current_amounts[currency] - 1)
+                   for currency in self.amounts.keys())

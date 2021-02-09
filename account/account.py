@@ -8,16 +8,16 @@ class Account (ABC):
 
     __amounts = dict()
 
-    def __init__(self, amounts: dict):
-        self.__amounts = amounts
+    def __init__(self, amounts: dict, source: Source):
+        self.__amounts, self.__source = amounts, source
 
     @property
     def amounts(self) -> dict:
         return self.__amounts
 
     @property
-    @abstractmethod
-    def rates(self) -> dict: pass
+    def rates(self) -> dict:
+        return self.__source.pop()
 
     @abstractmethod
     def exchange(self, source: str, target: str, amount: float,
