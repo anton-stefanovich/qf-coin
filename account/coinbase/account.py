@@ -3,6 +3,7 @@ from ..account import Account
 
 class CoinbaseAccount (Account):
     from argparse import Namespace
+    from ..transaction import Transaction
 
     def __init__(self, config: Namespace):
 
@@ -51,12 +52,16 @@ class CoinbaseAccount (Account):
             (currency, native_amounts[currency] * amount)
             for currency, amount in self.rates.items()))
 
-    def exchange(self, source: str, target: str, amount: float,
-                 expected_current_amounts: dict = None) -> bool:
+    def perform(self, transaction: Transaction) -> bool:
 
-        # perform transaction
+        from .transaction import CoinbaseTransaction
+        exchange_transaction = CoinbaseTransaction(
+            self.__session, transaction, dict(
+                (currency, data.get('asset_id')) for
+                (currency, data) in self.__accounts.items()))
+        exchange_transaction.commit()
 
         self.__sync_amounts()
         return all(0.05 > abs(self.amounts[currency] /
-                   expected_current_amounts[currency] - 1)
+                   transaction.expected_current_amounts[currency] - 1)
                    for currency in self.amounts.keys())

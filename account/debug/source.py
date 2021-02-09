@@ -31,6 +31,5 @@ class DebugSource (Source):
             lambda source: all(_key in source.keys() for _key in sources.keys()),
             (_sources[_key] for _key in sorted(_sources.keys()))))
 
-    def pop(self) -> dict:
-        return self.__sources.pop(0) \
-            if self.__sources else None
+    def pop(self, trade_timeout: float = None) -> dict:
+        return self.__sources.pop(0) if self.__sources else None

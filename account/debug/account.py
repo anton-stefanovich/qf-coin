@@ -3,6 +3,7 @@ from ..account import Account
 
 class DebugAccount (Account):
     from argparse import Namespace
+    from ..transaction import Transaction
 
     def __init__(self, config: Namespace):
         from .source import DebugSource
@@ -11,9 +12,8 @@ class DebugAccount (Account):
             config.trade_currencies), DebugSource(config))
         self.__exchange_fee = config.debug_exchange_fee
 
-    def exchange(self, source: str, target: str, amount: float,
-                 expected_current_amounts: dict = None) -> bool:
-        self.amounts.update(expected_current_amounts or dict())
-        self.amounts[target] += amount * (1 - self.__exchange_fee)
-        self.amounts[source] -= amount
+    def perform(self, transaction: Transaction) -> bool:
+        self.amounts.update(transaction.expected_current_amounts or dict())
+        self.amounts[transaction.target] += transaction.amount * (1 - self.__exchange_fee)
+        self.amounts[transaction.source] -= transaction.amount
         return True

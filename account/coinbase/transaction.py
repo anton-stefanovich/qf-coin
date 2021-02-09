@@ -1,28 +1,27 @@
-from ..transaction import Transaction
+class CoinbaseTransaction:
 
+    from .session import CoinbaseSession
+    from ..transaction import Transaction
 
-class CoinbaseTransaction (Transaction):
-    from requests import Session
+    from ._constants import __CB_BASE_URL__
+    __CB_TRADE_URL__ = f'{__CB_BASE_URL__}/trades'
 
-    __CB_TRADE_URL__ = 'https://www.coinbase.com/api/v2/trades'
-
-    def __init__(self, session: Session,
-                 source: str, target: str,
-                 amount: float, currency: str):
-
+    def __init__(self, session: CoinbaseSession,
+                 transaction: Transaction,
+                 assets_map: dict):
         self.__session = session
+
         from json import dumps, loads
-        response = self.__session.post(
-            self.__CB_TRADE_URL__, dumps(dict(
-                source_asset=source, target_asset=target,
-                amount=amount, amount_asset=currency,
-                amount_from='input')))
+        response = self.__session.post(self.__CB_TRADE_URL__, dumps(
+            dict(source_asset=assets_map.get(transaction.source),
+                 target_asset=assets_map.get(transaction.target),
+                 amount=transaction.amount, amount_asset='USD',
+                 amount_from='input')))
 
         from tools.picker import cherry_pick_first
         self.__transaction_id = cherry_pick_first(
             loads(response.text), 'id')
 
-        self.__rate = cherry_pick_first(response.json(), 'exchange_rate > amount')
         assert self.__transaction_id
 
     def commit(self, attempts: int = 7, attempt_timeout: int = 1) -> bool:

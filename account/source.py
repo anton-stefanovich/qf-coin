@@ -5,4 +5,4 @@ class Source (ABC):
     from abc import abstractmethod
 
     @abstractmethod
-    def pop(self) -> dict: pass
+    def pop(self, trade_timeout: float = None) -> dict: pass

@@ -61,8 +61,7 @@ class Analyst:
                 currency_data[self.__KEY_BASE__] *
                 currency_data[self.__KEY_LAST__])
 
-    @property
-    def transaction(self) -> Transaction:
+    def transaction(self, force: bool = False) -> Transaction:
         from account import Transaction
 
         release_items = tuple(sorted(
@@ -79,5 +78,5 @@ class Analyst:
             dict(record for record in (source_info, target_info)))
 
         return transaction \
-            if self.__is_valid(transaction) \
+            if force or self.__is_valid(transaction) \
             else None
