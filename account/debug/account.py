@@ -3,17 +3,23 @@ from ..account import Account
 
 class DebugAccount (Account):
     from argparse import Namespace
-    from ..transaction import Transaction
+    from ..deal import Deal
 
     def __init__(self, config: Namespace):
         from .source import DebugSource
-        super().__init__(dict(
-            (currency, config.debug_amount) for currency in
-            config.trade_currencies), DebugSource(config))
-        self.__exchange_fee = config.debug_exchange_fee
+        source = DebugSource(config)
 
-    def perform(self, transaction: Transaction) -> bool:
-        self.amounts.update(transaction.expected_current_amounts or dict())
-        self.amounts[transaction.target] += transaction.amount * (1 - self.__exchange_fee)
-        self.amounts[transaction.source] -= transaction.amount
+        super().__init__(dict(
+            (currency, config.debug_amount / rate)
+            for currency, rate in source.pop().items()),
+            source, config)
+
+        self.__exchange_fee = \
+            config.debug_exchange_fee
+
+    def _perform(self, deal: Deal) -> bool:
+        self.amounts[deal.source] -= deal.amount / self.last_rates[deal.source]
+        self.amounts[deal.target] += deal.amount / self.last_rates[deal.target] * \
+            (1 - self.__exchange_fee)  # exchange fee
+
         return True

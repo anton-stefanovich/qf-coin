@@ -4,11 +4,11 @@
   "api-version":        "2020-12-19",
 
   "trade-timeout":      60,
-  "trade-amount":       0.03,
-  "trade-percentage":   0.05,
   "trade-currencies":   ["etc", "eth"],
+  "trade-rebound":      0.05,
+  "trade-limit":        0.05,
 
-  "debug":              true,
+  "debug-mode":         true,
   "debug-scope":        "month",
   "debug-amount":       1000,
   "debug-exchange-fee": 0.02,
