@@ -1,22 +1,23 @@
 class CoinbaseTransaction:
 
     from .session import CoinbaseSession
-    from ..transaction import Transaction
+    from ..deal import Deal
 
     from ._constants import __CB_BASE_URL__
     __CB_TRADE_URL__ = f'{__CB_BASE_URL__}/trades'
 
     def __init__(self, session: CoinbaseSession,
-                 transaction: Transaction,
-                 assets_map: dict):
+                 deal: Deal, assets_map: dict):
         self.__session = session
 
         from json import dumps, loads
         response = self.__session.post(self.__CB_TRADE_URL__, dumps(
-            dict(source_asset=assets_map.get(transaction.source),
-                 target_asset=assets_map.get(transaction.target),
-                 amount=transaction.amount, amount_asset='USD',
-                 amount_from='input')))
+            dict(source_asset=assets_map.get(deal.source),
+                 target_asset=assets_map.get(deal.target),
+                 amount_asset=deal.currency,
+                 amount_from='input',
+                 amount=deal.amount,
+                 )))
 
         from tools.picker import cherry_pick_first
         self.__transaction_id = cherry_pick_first(
@@ -24,7 +25,7 @@ class CoinbaseTransaction:
 
         assert self.__transaction_id
 
-    def commit(self, attempts: int = 7, attempt_timeout: int = 1) -> bool:
+    def commit(self, attempts: int = 17, attempt_timeout: int = 1) -> bool:
 
         transaction_link = f'{self.__CB_TRADE_URL__}/{self.__transaction_id}'
         self.__session.post(f'{transaction_link}/commit')

@@ -8,19 +8,19 @@ class Trader:
         self.__account = target_account(config)
 
         from .supervisor import Supervisor
-        self.__analyst = Supervisor(
+        self.__supervisor = Supervisor(
             self.__account.rates,
             config.trade_rebound)
 
         self._perform(
-            self.__analyst.deal())
+            self.__supervisor.deal())
 
     def go(self):
         attempt = 0  # to show the number of attempts
-        while self.__analyst.feed(self.__account.rates):
+        while self.__supervisor.feed(self.__account.rates):
             attempt += 1  # new attempt started
 
-            if deal := self.__analyst.deal():
+            if deal := self.__supervisor.deal():
                 self._perform(deal)
                 attempt = print('.' * attempt) or 0
 
@@ -30,5 +30,5 @@ class Trader:
 
     def _perform(self, offer: Offer):
         if self.__account.perform(offer):
-            self.__analyst.reset(
+            self.__supervisor.reset(
                 dict.fromkeys(offer.coins))

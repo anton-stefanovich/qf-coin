@@ -3,7 +3,7 @@ from ..account import Account
 
 class CoinbaseAccount (Account):
     from argparse import Namespace
-    from ..transaction import Transaction
+    from ..deal import Deal
 
     def __init__(self, config: Namespace):
 
@@ -12,7 +12,7 @@ class CoinbaseAccount (Account):
 
         super().__init__(
             dict.fromkeys(config.trade_currencies),
-            CoinbaseSourceAPI(config))
+            CoinbaseSourceAPI(config), config)
 
         from tools.picker import cherry_pick_first
         from pycoinbase.wallet.client import Client
@@ -43,25 +43,21 @@ class CoinbaseAccount (Account):
 
         # getting the map of native amounts
         from tools.picker import cherry_pick_first
-        native_amounts = None if not accounts_response else dict(
+        self.amounts.update(dict() if not accounts_response else dict(
             (currency, float(cherry_pick_first(cherry_pick_first(
                 accounts_response, id=info.get('id')), 'balance > amount')))
-            for currency, info in self.__accounts.items())
+            for currency, info in self.__accounts.items()))
 
-        self.amounts.update(dict(
-            (currency, native_amounts[currency] * amount)
-            for currency, amount in self.rates.items()))
-
-    def perform(self, transaction: Transaction) -> bool:
+    def _perform(self, deal: Deal) -> bool:
 
         from .transaction import CoinbaseTransaction
         exchange_transaction = CoinbaseTransaction(
-            self.__session, transaction, dict(
+            self.__session, deal, dict(
                 (currency, data.get('asset_id')) for
                 (currency, data) in self.__accounts.items()))
-        exchange_transaction.commit()
 
-        self.__sync_amounts()
-        return all(0.05 > abs(self.amounts[currency] /
-                   transaction.expected_current_amounts[currency] - 1)
-                   for currency in self.amounts.keys())
+        if not exchange_transaction.commit():
+            return print('Something went wrong while performing '
+                         'the transaction') or False
+
+        return self.__sync_amounts() or True
