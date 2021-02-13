@@ -6,23 +6,37 @@ class Trader:
     def __init__(self, config: Namespace):
         from .factory import target_account
         self.__account = target_account(config)
+        self.__file = config.trade_status_file
 
+        self.__data = self._load()
         from .supervisor import Supervisor
         self.__supervisor = Supervisor(
-            self.__account.rates,
+            self.__data or self.__account.rates,
             config.trade_rebound)
 
-        self._perform(
-            self.__supervisor.deal())
+    def _load(self) -> dict:
+        from pathlib import Path
+        if Path(self.__file).is_file():
+            from json import load
+            with open(self.__file, 'r') as file:
+                return load(file) or False
 
-    def go(self):
-        attempt = 0  # to show the number of attempts
-        while self.__supervisor.feed(self.__account.rates):
-            attempt += 1  # new attempt started
+    def _dump(self) -> bool:
+        from json import dump
+        with open(self.__file, 'w') as file:
+            return dump(self.__supervisor.serialize(),
+                        file, indent=2) or True
+
+    def go(self, attempts_limit: int = None):
+        while ((attempts_limit is None) or attempts_limit > 0) \
+                and self.__supervisor.feed(self.__account.rates):
+            self._dump()  # saving the current status
+
+            if isinstance(attempts_limit, int):
+                attempts_limit -= 1
 
             if deal := self.__supervisor.deal():
                 self._perform(deal)
-                attempt = print('.' * attempt) or 0
 
         print('Final cash amounts:',
               sum(self.__account.cash.values()),

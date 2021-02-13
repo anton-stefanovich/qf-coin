@@ -1,13 +1,24 @@
 class Coin:
 
-    __KEY_ALIAS__ = 'alias'
     __KEY_RATE_BASE__ = 'base'
     __KEY_RATE_PEAK__ = 'peak'
     __KEY_RATE_LAST__ = 'last'
 
-    def __init__(self, alias: str, rate: float):
-        self.__data = dict()  # {self.__KEY_ALIAS__: alias}
-        self.reset(rate)
+    def __init__(self, data: (dict, float)):
+
+        self.__data = dict()
+        if isinstance(data, dict):
+            assert all(key in data.keys() for key in (
+                self.__KEY_RATE_BASE__, self.__KEY_RATE_PEAK__,
+                self.__KEY_RATE_LAST__)), 'Invalid Coin data provided'
+            self.__data.update(data)
+
+        elif isinstance(data, float):
+            self.reset(data)
+
+    def serialize(self) -> dict:
+        from copy import deepcopy
+        return deepcopy(self.__data)
 
     def reset(self, rate: float):
         (self.__data[self.__KEY_RATE_BASE__],

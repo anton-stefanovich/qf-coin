@@ -10,4 +10,4 @@ venv/
 .idea/
 
 # configuration
-config.json
+*.json

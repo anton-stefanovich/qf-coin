@@ -17,9 +17,10 @@ class Config:
         for _type, _keys in {
             float: ('debug-exchange-fee', 'debug-amount',
                     'trade-limit', 'trade-rebound', 'trade-timeout'),
-            str:   ('trade-currencies', 'trade-cookie', 'debug-scope',
-                    'api-key', 'api-secret', 'api-version')}.items():
-            for _key in _keys:  # iterating the keys set
+            str:   ('trade-currencies', 'trade-cookie', 'trade-status-file',
+                    'api-key', 'api-secret', 'api-version', 'debug-scope')
+                }.items():  # picking arguments and theirs types
+            for _key in _keys:  # iterating the picked keys set
                 parser.add_argument(*get_aliases(_key), type=_type,
                                     default=config.get(_key, None))
 

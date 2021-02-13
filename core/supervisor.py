@@ -5,9 +5,13 @@ class Supervisor:
                  trade_rebound: float):
         from core.coin import Coin
         self.__data = dict(
-            (currency, Coin(currency, rate))
-            for currency, rate in rates.items())
+            (currency, Coin(data))
+            for currency, data in rates.items())
         self.__trade_rebound = trade_rebound
+
+    def serialize(self) -> dict:
+        return dict((key, data.serialize())
+                    for key, data in self.__data.items())
 
     def reset(self, rates: dict = None):
         for currency, rate in rates.items():
