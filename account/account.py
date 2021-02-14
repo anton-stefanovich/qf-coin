@@ -19,16 +19,19 @@ class Account (ABC):
     def amounts(self) -> dict:
         return self.__amounts
 
-    @property
-    def rates(self) -> dict:
-        current_rates = self.__source.pop()
+    def _rates(self, force: bool = False) -> dict:
+        current_rates = self.__source.pop(force)
         self.__last_rates = current_rates \
             if current_rates else self.last_rates
         return current_rates
 
     @property
+    def rates(self) -> dict:
+        return self._rates()
+
+    @property
     def last_rates(self) -> dict:
-        return self.__last_rates
+        return self.__last_rates or self._rates(True)
 
     @property
     def cash(self):

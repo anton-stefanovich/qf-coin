@@ -21,7 +21,7 @@ class Trader:
         self.__data = self._load()
         from .supervisor import Supervisor
         self.__supervisor = Supervisor(
-            self.__data or self.__account.rates,
+            self.__data or self.__account.last_rates,
             config.trade_rebound)
 
         info('The new trader instance '
@@ -56,7 +56,6 @@ class Trader:
              sum(self.__account.cash.values()),
              self.__account.cash)
         shutdown()
-
 
     def _perform(self, offer: Offer):
         if self.__account.perform(offer):

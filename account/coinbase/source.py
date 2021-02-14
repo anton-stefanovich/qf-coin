@@ -11,12 +11,11 @@ class CoinbaseSourceAPI (Source):
         self.__trade_timeout = config.trade_timeout
         self.__trade_currencies = config.trade_currencies
 
-    def pop(self, trade_timeout: float = None):
+    def pop(self, force: bool = False):
         from time import sleep, time
-        sleep(max((self.__last_access or 0) - time() +
-              self.__trade_timeout if trade_timeout is None
-              else trade_timeout, 0))
-        self.__last_access = time()
+        self.__last_access = self.__last_access if force else \
+            sleep(max((self.__last_access or 0) - time() +
+                  self.__trade_timeout, 0)) or time()
 
         from ._constants import __CB_BASE_URL__
         rates_response = self.__session.get(
