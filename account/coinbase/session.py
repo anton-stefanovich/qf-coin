@@ -7,4 +7,4 @@ class CoinbaseSession (Session):
     def __init__(self, config: Namespace):
         super().__init__()
         self.cookies.update(
-            dict(jwt=config.trade_cookie))
+            dict(jwt=config.auth_cookie))

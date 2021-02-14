@@ -4,6 +4,7 @@
   "api-version":        "2020-12-19",
 
   "trade-timeout":      60,
+  "trade-status-file":  "last.json",
   "trade-currencies":   ["etc", "eth"],
   "trade-rebound":      0.05,
   "trade-limit":        0.05,
@@ -13,5 +14,10 @@
   "debug-amount":       1000,
   "debug-exchange-fee": 0.02,
 
-  "trade-cookie":       "<coinbase-auth-cookie>"
+  "auth-cookie":        "<coinbase-auth-cookie>",
+
+  "log-record-format":  "{asctime} {levelname}:\t{message}",
+  "log-date-format":    "%Y-%m-%d %H:%M:%S",
+  "log-file-name":      "trade.log",
+  "log-level":          "info"
 }

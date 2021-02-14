@@ -57,7 +57,8 @@ class CoinbaseAccount (Account):
                 (currency, data) in self.__accounts.items()))
 
         if not exchange_transaction.commit():
-            return print('Something went wrong while performing '
+            from logging import error
+            return error('Something went wrong while performing '
                          'the transaction') or False
 
         return self.__sync_amounts() or True

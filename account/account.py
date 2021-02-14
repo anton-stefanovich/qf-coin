@@ -40,8 +40,9 @@ class Account (ABC):
     def _perform(self, deal: Deal) -> bool: pass
 
     def perform(self, offer: Offer) -> bool:
+        from logging import error, info, debug
         if not ((exchange_rates := self.rates) and offer):
-            return print('Illegal offer or rates') or False
+            return error('Illegal offer or rates') or False
 
         source_value, target_value = (
             self.amounts[key] * exchange_rates[key]
@@ -54,15 +55,15 @@ class Account (ABC):
             else self.__trade_limit * source_value
 
         if trade_limit > deal.amount:
-            return print(f'WARNING: It\'s too less for trade: '
-                         f'{deal.amount} {deal.currency} '
-                         f'(min trade value: {trade_limit})') or False
+            return debug('It\'s too less for trade: '
+                         '%s %s (min trade value: %s)',
+                         deal.amount, deal.currency,
+                         trade_limit) or False
 
         if not self._perform(deal):
-            return print('Something went wrong and the deal '
-                         f'({deal.amount} {deal.currency}) '
-                         f'has not been performed') or False
+            return error('Something went wrong and '
+                         'the deal (%s %s) has not been performed',
+                         deal.amount, deal.currency) or False
 
-        return print('INFO: Exchange has been performed: '
-                     f'{deal.amount} {deal.currency} -> '
-                     f'{self.cash}') or True
+        return info('Exchange has been performed: %s %s -> %s',
+                    deal.amount, deal.currency, self.cash) or True

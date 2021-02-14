@@ -31,16 +31,17 @@ class CoinbaseTransaction:
         self.__session.post(f'{transaction_link}/commit')
 
         from json import loads
+        from logging import warning, info
         from tools.picker import cherry_pick_first
         for attempt in range(attempts):  # checking the transaction status
             transaction_status = self.__session.get(transaction_link)
             if transaction_status and 'completed' in cherry_pick_first(
                     loads(transaction_status.text), 'status'):
-                return print('Transaction succeed') or True
+                return info('Transaction succeed') or True
 
             else:
                 from time import sleep
-                print(f'Transaction verification failed #{attempt}')
+                warning(f'Transaction verification failed %s', attempt)
                 sleep(attempt_timeout if attempt < attempts - 1 else 0)
 
-        return print('No transaction success status') or False
+        return warning('No transaction success status') or False
