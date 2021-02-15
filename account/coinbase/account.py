@@ -5,7 +5,8 @@ class CoinbaseAccount (Account):
     from argparse import Namespace
     from ..deal import Deal
 
-    def __init__(self, config: Namespace):
+    def __init__(self, config: Namespace,
+                 amounts: dict):  # restored amounts
 
         from .session import CoinbaseSession
         from .source import CoinbaseSourceAPI
@@ -30,11 +31,13 @@ class CoinbaseAccount (Account):
                 known_accounts, name=f'{currency.upper()} Wallet'))
                 for currency in config.trade_currencies).items())
 
-        self.__sync_amounts()
+        self.__sync_amounts(amounts if all(
+            amounts.get(key) for key in config.trade_currencies)
+                            else self.__get_amounts())
 
-    def __sync_amounts(self):
-        # FixMe: convert to the client usage
+    def __get_amounts(self):
         from ._constants import __CB_BASE_URL__
+        # FixMe: convert to the client usage
         accounts_response = self.__session.get(
             f'{__CB_BASE_URL__}/accounts?limit=100')
 
@@ -43,10 +46,13 @@ class CoinbaseAccount (Account):
 
         # getting the map of native amounts
         from tools.picker import cherry_pick_first
-        self.amounts.update(dict() if not accounts_response else dict(
+        return dict() if not accounts_response else dict(
             (currency, float(cherry_pick_first(cherry_pick_first(
                 accounts_response, id=info.get('id')), 'balance > amount')))
-            for currency, info in self.__accounts.items()))
+            for currency, info in self.__accounts.items())
+
+    def __sync_amounts(self, amounts: dict = None):
+        self.amounts.update(amounts or self.__get_amounts())
 
     def _perform(self, deal: Deal) -> bool:
 

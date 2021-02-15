@@ -8,10 +8,9 @@ class Coin:
 
         self.__data = dict()
         if isinstance(data, dict):
-            assert all(key in data.keys() for key in (
+            self.__data.update(dict((key, data[key]) for key in (
                 self.__KEY_RATE_BASE__, self.__KEY_RATE_PEAK__,
-                self.__KEY_RATE_LAST__)), 'Invalid Coin data provided'
-            self.__data.update(data)
+                self.__KEY_RATE_LAST__)))
 
         elif isinstance(data, float):
             self.reset(data)
